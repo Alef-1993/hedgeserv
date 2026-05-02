@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f2044">
+<title>HedgeServ Cleaning</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0f2044;
+    --navy2: #1a3260;
+    --blue: #2456a4;
+    --blue-light: #3a72c8;
+    --accent: #f0a500;
+    --accent2: #ffbe3d;
+    --green: #1a7a4a;
+    --green-bg: #e8f7ef;
+    --green-tick: #22c55e;
+    --red: #c0392b;
+    --surface: #f4f6fb;
+    --card: #ffffff;
+    --border: #dde3f0;
+    --text: #0f2044;
+    --text2: #4a5980;
+    --text3: #8a96b0;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --shadow: 0 2px 12px rgba(15,32,68,0.10);
+    --shadow-lg: 0 8px 32px rgba(15,32,68,0.16);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--surface);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+
+  /* ── TOP NAV ── */
+  .topbar {
+    background: var(--navy);
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+  }
+  .topbar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px 10px;
+  }
+  .topbar-logo {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .topbar-logo .dot {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700; color: var(--navy);
+  }
+  .topbar-logo span {
+    font-size: 15px; font-weight: 700; color: #fff;
+    letter-spacing: 0.3px;
+  }
+  .topbar-logo small {
+    display: block; font-size: 10px; color: rgba(255,255,255,0.5);
+    font-weight: 400; letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .topbar-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px; color: var(--accent2);
+    text-align: right;
+  }
+  .topbar-date strong { display: block; font-size: 14px; }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    background: var(--navy2);
+    border-top: 1px solid rgba(255,255,255,0.07);
+  }
+  .tab {
+    flex: 1; padding: 10px 4px;
+    text-align: center;
+    font-size: 11px; font-weight: 600;
+    color: rgba(255,255,255,0.45);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+  .tab.active {
+    color: var(--accent2);
+    border-bottom-color: var(--accent);
+  }
+  .tab-icon { display: block; font-size: 16px; margin-bottom: 2px; }
+
+  /* ── PAGES ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── DAILY PAGE ── */
+  .daily-header {
+    padding: 16px 16px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .daily-header h2 {
+    font-size: 18px; font-weight: 700; color: var(--navy);
+  }
+
+  /* Date navigator */
+  .date-nav {
+    display: flex; align-items: center;
+    margin: 12px 16px 0;
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .date-nav-btn {
+    width: 48px; height: 52px;
+    border: none; background: none;
+    font-size: 22px; font-weight: 700;
+    color: var(--blue);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .date-nav-btn:active { background: var(--surface); }
+  .date-nav-btn:disabled { color: var(--border); cursor: default; }
+  .date-nav-center {
+    flex: 1; text-align: center;
+    padding: 8px 4px;
+    cursor: pointer;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+  .date-nav-label {
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text3); margin-bottom: 2px;
+  }
+  .date-nav-label.is-today { color: var(--accent); }
+  .date-nav-label.is-past  { color: var(--blue); }
+  .date-nav-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px; font-weight: 600; color: var(--navy);
+  }
+  .past-banner {
+    margin: 8px 16px 0;
+    background: #fff8e1;
+    border: 1.5px solid var(--accent);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    font-size: 12px; font-weight: 600; color: #7B3F00;
+    text-align: center;
+  }
+  .progress-pill {
+    background: var(--navy);
+    color: #fff;
+    font-size: 11px; font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-family: 'DM Mono', monospace;
+  }
+  .progress-bar-wrap {
+    margin: 12px 16px 0;
+    background: var(--border);
+    border-radius: 8px;
+    height: 6px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue), var(--accent));
+    border-radius: 8px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  .section-block {
+    margin: 14px 16px 0;
+  }
+  .section-title {
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text2);
+    padding: 6px 0 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title::before {
+    content: '';
+    display: block; width: 3px; height: 14px;
+    border-radius: 2px;
+  }
+  .sec-main .section-title::before { background: var(--blue); }
+  .sec-o1 .section-title::before { background: var(--green); }
+  .sec-o2 .section-title::before { background: var(--green); }
+  .sec-o3 .section-title::before { background: var(--green); }
+  .sec-mr .section-title::before { background: #7c3aed; }
+  .sec-kt .section-title::before { background: var(--accent); }
+
+  .task-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .task-row {
+    display: flex;
+    align-items: center;
+    padding: 13px 14px;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+    transition: background 0.15s;
+    cursor: pointer;
+    min-height: 52px;
+  }
+  .task-row:last-child { border-bottom: none; }
+  .task-row.done { background: var(--green-bg); }
+  .task-row.done .task-name { color: var(--green); text-decoration: line-through; opacity: 0.7; }
+
+  .task-check {
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+    font-size: 14px;
+  }
+  .task-row.done .task-check {
+    background: var(--green-tick);
+    border-color: var(--green-tick);
+    color: #fff;
+  }
+  .task-name {
+    flex: 1;
+    font-size: 14px; font-weight: 500;
+    color: var(--text);
+    line-height: 1.3;
+  }
+
+  /* Qty input */
+  .qty-wrap {
+    display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+  }
+  .qty-btn {
+    width: 28px; height: 28px;
+    border-radius: 7px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    font-size: 18px; font-weight: 600;
+    color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.1s;
+    line-height: 1;
+  }
+  .qty-btn:active { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .qty-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 16px; font-weight: 700;
+    color: var(--navy);
+    min-width: 28px; text-align: center;
+  }
+  .qty-val.nonzero { color: var(--green); }
+
+  /* ── REPORTS PAGE ── */
+  .reports-wrap { padding: 16px; }
+  .report-tabs {
+    display: flex; gap: 8px; margin-bottom: 16px;
+  }
+  .report-tab {
+    flex: 1; padding: 10px 4px;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    text-align: center;
+    font-size: 12px; font-weight: 600;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .report-tab.active {
+    background: var(--navy);
+    border-color: var(--navy);
+    color: #fff;
+  }
+
+  .date-range-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 14px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+  .date-range-card label {
+    font-size: 11px; font-weight: 600; color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.8px;
+    display: block; margin-bottom: 4px;
+  }
+  .date-row { display: flex; gap: 10px; align-items: flex-end; }
+  .date-field { flex: 1; }
+  .date-field input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px; font-weight: 500;
+    color: var(--navy);
+    background: var(--surface);
+    outline: none;
+  }
+  .date-field input:focus { border-color: var(--blue); }
+  .quick-btns { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .quick-btn {
+    padding: 6px 12px;
+    background: var(--navy);
+    color: #fff;
+    border-radius: 20px;
+    font-size: 11px; font-weight: 600;
+    cursor: pointer;
+    border: none;
+    letter-spacing: 0.3px;
+  }
+  .quick-btn:active { background: var(--blue); }
+
+  .report-summary {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; margin-bottom: 14px;
+  }
+  .summary-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 14px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
+  .summary-card .sum-val {
+    font-size: 28px; font-weight: 700;
+    font-family: 'DM Mono', monospace;
+    color: var(--navy);
+  }
+  .summary-card .sum-label {
+    font-size: 11px; color: var(--text3);
+    font-weight: 500; margin-top: 2px;
+  }
+
+  .report-section { margin-bottom: 14px; }
+  .report-sec-title {
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text2); padding: 0 0 8px;
+  }
+  .report-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .report-row {
+    display: flex; align-items: center;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+  }
+  .report-row:last-child { border-bottom: none; }
+  .report-task-name {
+    flex: 1; font-size: 13px; font-weight: 500; color: var(--text);
+  }
+  .report-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 14px; font-weight: 700;
+    color: var(--text3);
+    min-width: 36px; text-align: right;
+  }
+  .report-val.nonzero { color: var(--green); }
+  .report-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 4px;
+    width: 60px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .report-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue), var(--green-tick));
+    border-radius: 4px;
+  }
+
+  /* Export button */
+  .export-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px; font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 16px;
+    box-shadow: var(--shadow-lg);
+    letter-spacing: 0.3px;
+  }
+  .export-btn:active { background: var(--blue); }
+
+  /* ── HISTORY PAGE ── */
+  .history-wrap { padding: 16px; }
+  .history-day {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .history-day-header {
+    background: var(--navy);
+    padding: 12px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .history-day-header span {
+    font-size: 13px; font-weight: 700; color: #fff;
+    font-family: 'DM Mono', monospace;
+  }
+  .history-day-header small {
+    font-size: 11px; color: var(--accent2); font-weight: 500;
+  }
+  .history-item {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px;
+  }
+  .history-item:last-child { border-bottom: none; }
+  .history-item .hi-check { color: var(--green-tick); font-size: 14px; }
+  .history-item .hi-val {
+    margin-left: auto;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px; font-weight: 700; color: var(--blue);
+  }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--navy);
+    display: flex;
+    box-shadow: 0 -2px 16px rgba(0,0,0,0.15);
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .bnav-item {
+    flex: 1; padding: 10px 4px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .bnav-item .bi-icon { font-size: 20px; display: block; }
+  .bnav-item .bi-label {
+    font-size: 10px; font-weight: 600;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-top: 2px;
+  }
+  .bnav-item.active .bi-label { color: var(--accent2); }
+  .bnav-item.active .bi-icon { filter: drop-shadow(0 0 4px var(--accent)); }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--navy); color: #fff;
+    padding: 10px 20px; border-radius: 20px;
+    font-size: 13px; font-weight: 600;
+    opacity: 0; transition: all 0.3s;
+    z-index: 200; white-space: nowrap;
+    box-shadow: var(--shadow-lg);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .empty-state {
+    text-align: center; padding: 40px 20px;
+    color: var(--text3);
+  }
+  .empty-state .es-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-logo">
+      <div class="dot">H</div>
+      <div>
+        <span>HedgeServ</span>
+        <small>Office Cleaning</small>
+      </div>
+    </div>
+    <div class="topbar-date">
+      <strong id="today-display"></strong>
+      <span id="day-display"></span>
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" onclick="showPage('daily')">
+      <span class="tab-icon">✅</span>Daily
+    </div>
+    <div class="tab" onclick="showPage('reports')">
+      <span class="tab-icon">📊</span>Reports
+    </div>
+    <div class="tab" onclick="showPage('history')">
+      <span class="tab-icon">📅</span>History
+    </div>
+  </div>
+</div>
+
+<!-- ══ DAILY PAGE ══ -->
+<div id="page-daily" class="page active">
+  <div class="daily-header">
+    <h2 id="daily-title">Today's Checklist</h2>
+    <div class="progress-pill" id="progress-pill">0 / 0</div>
+  </div>
+
+  <!-- Date navigator -->
+  <div class="date-nav">
+    <button class="date-nav-btn" onclick="shiftDay(-1)">‹</button>
+    <div class="date-nav-center" onclick="pickDate()">
+      <div class="date-nav-label" id="date-nav-label">Today</div>
+      <div class="date-nav-date" id="date-nav-date"></div>
+    </div>
+    <button class="date-nav-btn" id="btn-next" onclick="shiftDay(1)" disabled>›</button>
+  </div>
+  <!-- Custom calendar modal -->
+  <div id="cal-modal" style="display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.5);align-items:flex-end;justify-content:center;" onclick="closeCalModal(event)">
+    <div id="cal-box" style="background:#fff;width:100%;max-width:420px;border-radius:20px 20px 0 0;padding:20px 16px 32px;box-shadow:0 -8px 32px rgba(0,0,0,0.2);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <button onclick="calShiftMonth(-1)" style="background:none;border:none;font-size:26px;color:#2456a4;cursor:pointer;padding:4px 14px;">‹</button>
+        <span id="cal-month-label" style="font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;color:#0f2044;"></span>
+        <button onclick="calShiftMonth(1)" id="cal-next-month" style="background:none;border:none;font-size:26px;color:#2456a4;cursor:pointer;padding:4px 14px;">›</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;margin-bottom:6px;">
+        <div style="font-size:11px;font-weight:700;color:#8a96b0;padding:4px;">Mo</div>
+        <div style="font-size:11px;font-weight:700;color:#8a96b0;padding:4px;">Tu</div>
+        <div style="font-size:11px;font-weight:700;color:#8a96b0;padding:4px;">We</div>
+        <div style="font-size:11px;font-weight:700;color:#8a96b0;padding:4px;">Th</div>
+        <div style="font-size:11px;font-weight:700;color:#8a96b0;padding:4px;">Fr</div>
+        <div style="font-size:11px;font-weight:700;color:#8a96b0;padding:4px;">Sa</div>
+        <div style="font-size:11px;font-weight:700;color:#8a96b0;padding:4px;">Su</div>
+      </div>
+      <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;"></div>
+      <button onclick="closeCalModal()" style="margin-top:18px;width:100%;padding:13px;background:#0f2044;color:#fff;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-bar" id="progress-bar"></div>
+  </div>
+  <div id="daily-tasks"></div>
+  <div style="height:20px"></div>
+</div>
+
+<!-- ══ REPORTS PAGE ══ -->
+<div id="page-reports" class="page">
+  <div class="reports-wrap">
+    <div class="report-tabs">
+      <div class="report-tab active" onclick="setReportPeriod('week')">Weekly</div>
+      <div class="report-tab" onclick="setReportPeriod('month')">Monthly</div>
+      <div class="report-tab" onclick="setReportPeriod('year')">Annual</div>
+      <div class="report-tab" onclick="setReportPeriod('custom')">Custom</div>
+    </div>
+
+    <div class="date-range-card">
+      <div class="date-row">
+        <div class="date-field">
+          <label>From</label>
+          <input type="date" id="date-from" onchange="renderReport()">
+        </div>
+        <div class="date-field">
+          <label>To</label>
+          <input type="date" id="date-to" onchange="renderReport()">
+        </div>
+      </div>
+      <div class="quick-btns">
+        <button class="quick-btn" onclick="setReportPeriod('week')">This Week</button>
+        <button class="quick-btn" onclick="setReportPeriod('month')">This Month</button>
+        <button class="quick-btn" onclick="setReportPeriod('year')">This Year</button>
+      </div>
+    </div>
+
+    <div class="report-summary" id="report-summary"></div>
+    <div id="report-content"></div>
+
+    <button class="export-btn" onclick="exportReport()">
+      📄 Export Report (PDF)
+    </button>
+  </div>
+</div>
+
+<!-- ══ HISTORY PAGE ══ -->
+<div id="page-history" class="page">
+  <div class="history-wrap">
+    <div id="history-content"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════
+const TASKS = [
+  // ── MAIN OFFICE ──
+  { sec:"MAIN OFFICE", key:"mo_desks",        name:"Desks cleaned",                   type:"qty"  },
+  { sec:"MAIN OFFICE", key:"mo_computers",    name:"Computers / monitors wiped",      type:"qty"  },
+  { sec:"MAIN OFFICE", key:"mo_bin_gen_e",    name:"Bin General — emptied",           type:"tick" },
+  { sec:"MAIN OFFICE", key:"mo_bin_rec_e",    name:"Bin Recyclable — emptied",        type:"tick" },
+  { sec:"MAIN OFFICE", key:"mo_bin_org_e",    name:"Bin Organic — emptied",           type:"tick" },
+  { sec:"MAIN OFFICE", key:"mo_bins_cleaned", name:"Bins — all cleaned inside",       type:"tick" },
+  { sec:"MAIN OFFICE", key:"mo_door_l",       name:"Main doors (left) wiped",         type:"tick" },
+  { sec:"MAIN OFFICE", key:"mo_door_r",       name:"Main doors (right) wiped",        type:"tick" },
+  { sec:"MAIN OFFICE", key:"mo_mat_l",        name:"Door mat (left) vacuumed",        type:"tick" },
+  { sec:"MAIN OFFICE", key:"mo_mat_r",        name:"Door mat (right) vacuumed",       type:"tick" },
+  { sec:"MAIN OFFICE", key:"mo_windows",      name:"Windows dusted",                  type:"qty"  },
+  { sec:"MAIN OFFICE", key:"mo_skirting",     name:"Skirting boards dusted",          type:"tick" },
+  { sec:"MAIN OFFICE", key:"mo_floor_vac",    name:"Floor — vacuumed",                type:"tick" },
+
+  // ── OFFICE 1 ──
+  { sec:"OFFICE 1 — Director", key:"o1_desk",      name:"Desk wiped",               type:"tick" },
+  { sec:"OFFICE 1 — Director", key:"o1_computer",  name:"Computer / monitor wiped", type:"tick" },
+  { sec:"OFFICE 1 — Director", key:"o1_mtg",       name:"Meeting table wiped",      type:"tick" },
+  { sec:"OFFICE 1 — Director", key:"o1_glass",     name:"Glass walls / door wiped", type:"tick" },
+  { sec:"OFFICE 1 — Director", key:"o1_window",    name:"Window dusted",            type:"tick" },
+  { sec:"OFFICE 1 — Director", key:"o1_heater",    name:"Heater dusted",            type:"tick" },
+  { sec:"OFFICE 1 — Director", key:"o1_skirting",  name:"Skirting boards dusted",   type:"tick" },
+  { sec:"OFFICE 1 — Director", key:"o1_floor_vac", name:"Floor — vacuumed",         type:"tick" },
+
+  // ── OFFICE 2 ──
+  { sec:"OFFICE 2 — Directors", key:"o2_desk1",     name:"Desk 1 wiped",             type:"tick" },
+  { sec:"OFFICE 2 — Directors", key:"o2_desk2",     name:"Desk 2 wiped",             type:"tick" },
+  { sec:"OFFICE 2 — Directors", key:"o2_comp1",     name:"Computer 1 wiped",         type:"tick" },
+  { sec:"OFFICE 2 — Directors", key:"o2_comp2",     name:"Computer 2 wiped",         type:"tick" },
+  { sec:"OFFICE 2 — Directors", key:"o2_mtg",       name:"Meeting table wiped",      type:"tick" },
+  { sec:"OFFICE 2 — Directors", key:"o2_glass",     name:"Glass door wiped",         type:"tick" },
+  { sec:"OFFICE 2 — Directors", key:"o2_heater",    name:"Heater dusted",            type:"tick" },
+  { sec:"OFFICE 2 — Directors", key:"o2_skirting",  name:"Skirting boards dusted",   type:"tick" },
+  { sec:"OFFICE 2 — Directors", key:"o2_floor_vac", name:"Floor — vacuumed",         type:"tick" },
+
+  // ── OFFICE 3 ──
+  { sec:"OFFICE 3 — Director", key:"o3_desk",      name:"Desk wiped",               type:"tick" },
+  { sec:"OFFICE 3 — Director", key:"o3_computer",  name:"Computer / monitor wiped", type:"tick" },
+  { sec:"OFFICE 3 — Director", key:"o3_glass",     name:"Glass door wiped",         type:"tick" },
+  { sec:"OFFICE 3 — Director", key:"o3_window",    name:"Window dusted",            type:"tick" },
+  { sec:"OFFICE 3 — Director", key:"o3_heater",    name:"Heater dusted",            type:"tick" },
+  { sec:"OFFICE 3 — Director", key:"o3_skirting",  name:"Skirting boards dusted",   type:"tick" },
+  { sec:"OFFICE 3 — Director", key:"o3_floor_vac", name:"Floor — vacuumed",         type:"tick" },
+
+  // ── GLASS MEETING ROOM ──
+  { sec:"GLASS MEETING ROOM", key:"mr_table_lg",  name:"Large table wiped",         type:"tick" },
+  { sec:"GLASS MEETING ROOM", key:"mr_table_s1",  name:"Small table 1 wiped",       type:"tick" },
+  { sec:"GLASS MEETING ROOM", key:"mr_table_s2",  name:"Small table 2 wiped",       type:"tick" },
+  { sec:"GLASS MEETING ROOM", key:"mr_tv",        name:"Video conf. screen wiped",  type:"tick" },
+  { sec:"GLASS MEETING ROOM", key:"mr_bin_e",     name:"Bin — emptied",             type:"tick" },
+  { sec:"GLASS MEETING ROOM", key:"mr_bin_c",     name:"Bin — cleaned inside",      type:"tick" },
+  { sec:"GLASS MEETING ROOM", key:"mr_glass",     name:"Glass walls / door wiped",  type:"tick" },
+  { sec:"GLASS MEETING ROOM", key:"mr_window",    name:"Window dusted",             type:"tick" },
+  { sec:"GLASS MEETING ROOM", key:"mr_heater1",   name:"Heater 1 dusted",           type:"tick" },
+  { sec:"GLASS MEETING ROOM", key:"mr_heater2",   name:"Heater 2 dusted",           type:"tick" },
+  { sec:"GLASS MEETING ROOM", key:"mr_skirting",  name:"Skirting boards dusted",    type:"tick" },
+  { sec:"GLASS MEETING ROOM", key:"mr_floor_vac", name:"Floor — vacuumed",          type:"tick" },
+  { sec:"GLASS MEETING ROOM", key:"mr_floor_mop", name:"Floor — mopped",            type:"tick" },
+
+  // ── KITCHEN ──
+  { sec:"KITCHEN", key:"kt_door",          name:"Door wiped",                        type:"tick" },
+  { sec:"KITCHEN", key:"kt_coffee_simple", name:"Coffee machine — simple clean",     type:"tick" },
+  { sec:"KITCHEN", key:"kt_coffee_total",  name:"Coffee machine — total clean",      type:"tick" },
+  { sec:"KITCHEN", key:"kt_sink",          name:"Sink & taps cleaned",               type:"tick" },
+  { sec:"KITCHEN", key:"kt_counter",       name:"Countertops wiped",                 type:"tick" },
+  { sec:"KITCHEN", key:"kt_disp1",         name:"Water dispenser 1 — cleaned",       type:"tick" },
+  { sec:"KITCHEN", key:"kt_disp2",         name:"Water dispenser 2 — cleaned",       type:"tick" },
+  { sec:"KITCHEN", key:"kt_micro1",        name:"Microwave 1 — cleaned",             type:"tick" },
+  { sec:"KITCHEN", key:"kt_micro2",        name:"Microwave 2 — cleaned",             type:"tick" },
+  { sec:"KITCHEN", key:"kt_fridge1",       name:"Fridge 1 — cleaned",                type:"tick" },
+  { sec:"KITCHEN", key:"kt_fridge2",       name:"Fridge 2 — cleaned",                type:"tick" },
+  { sec:"KITCHEN", key:"kt_dishwasher_w",  name:"Dishwasher — cleaned",              type:"tick" },
+  { sec:"KITCHEN", key:"kt_dishwasher_q",  name:"Dishwasher — washes done",          type:"qty"  },
+  { sec:"KITCHEN", key:"kt_paper_wipe",    name:"Paper towel dispenser — wiped",     type:"tick" },
+  { sec:"KITCHEN", key:"kt_paper_roll",    name:"Paper towel dispenser — blue roll refilled", type:"tick" },
+  { sec:"KITCHEN", key:"kt_table1",        name:"Dining table 1 wiped",              type:"tick" },
+  { sec:"KITCHEN", key:"kt_table2",        name:"Dining table 2 wiped",              type:"tick" },
+  { sec:"KITCHEN", key:"kt_table3",        name:"Dining table 3 wiped",              type:"tick" },
+  { sec:"KITCHEN", key:"kt_table4",        name:"Dining table 4 wiped",              type:"tick" },
+  { sec:"KITCHEN", key:"kt_bin_gen_e",     name:"Bin General — emptied",             type:"tick" },
+  { sec:"KITCHEN", key:"kt_bin_rec_e",     name:"Bin Recyclable — emptied",          type:"tick" },
+  { sec:"KITCHEN", key:"kt_bin_org_e",     name:"Bin Organic — emptied",             type:"tick" },
+  { sec:"KITCHEN", key:"kt_bins_cleaned",  name:"Bins — all cleaned inside",         type:"tick" },
+  { sec:"KITCHEN", key:"kt_window",        name:"Window dusted",                     type:"tick" },
+  { sec:"KITCHEN", key:"kt_heater1",       name:"Heater 1 dusted",                   type:"tick" },
+  { sec:"KITCHEN", key:"kt_heater2",       name:"Heater 2 dusted",                   type:"tick" },
+  { sec:"KITCHEN", key:"kt_skirting",      name:"Skirting boards dusted",            type:"tick" },
+  { sec:"KITCHEN", key:"kt_floor_vac",     name:"Floor — swept / vacuumed",          type:"tick" },
+  { sec:"KITCHEN", key:"kt_floor_mop",     name:"Floor — mopped",                    type:"tick" },
+];
+
+const SEC_CLASS = {
+  "MAIN OFFICE": "sec-main",
+  "OFFICE 1 — Director": "sec-o1",
+  "OFFICE 2 — Directors": "sec-o2",
+  "OFFICE 3 — Director": "sec-o3",
+  "GLASS MEETING ROOM": "sec-mr",
+  "KITCHEN": "sec-kt",
+};
+
+// ══════════════════════════════════════════
+// STORAGE
+// ══════════════════════════════════════════
+let activeDate = new Date().toISOString().slice(0,10); // YYYY-MM-DD
+
+function todayKey() {
+  return new Date().toISOString().slice(0,10);
+}
+
+function getLog() {
+  try { return JSON.parse(localStorage.getItem('hs_log') || '{}'); } catch(e) { return {}; }
+}
+
+function saveLog(log) {
+  localStorage.setItem('hs_log', JSON.stringify(log));
+}
+
+function getDataForDate(dk) {
+  const log = getLog();
+  return log[dk] || {};
+}
+
+function setTaskValue(key, val) {
+  const log = getLog();
+  if (!log[activeDate]) log[activeDate] = {};
+  log[activeDate][key] = val;
+  saveLog(log);
+}
+
+function getTaskValue(key) {
+  return getDataForDate(activeDate)[key] || 0;
+}
+
+// ══════════════════════════════════════════
+// DATE NAVIGATION
+// ══════════════════════════════════════════
+function shiftDay(delta) {
+  const d = new Date(activeDate + 'T12:00:00');
+  d.setDate(d.getDate() + delta);
+  const newKey = d.toISOString().slice(0,10);
+  if (newKey > todayKey()) return; // can't go to future
+  activeDate = newKey;
+  updateDateNav();
+  refreshDailyUI();
+}
+
+let calViewYear, calViewMonth;
+
+function pickDate() {
+  const d = new Date(activeDate + 'T12:00:00');
+  calViewYear = d.getFullYear();
+  calViewMonth = d.getMonth();
+  renderCalModal();
+  document.getElementById('cal-modal').style.display = 'flex';
+}
+
+function closeCalModal(e) {
+  if (!e || e.target === document.getElementById('cal-modal')) {
+    document.getElementById('cal-modal').style.display = 'none';
+  }
+}
+
+function calShiftMonth(delta) {
+  calViewMonth += delta;
+  if (calViewMonth > 11) { calViewMonth = 0; calViewYear++; }
+  if (calViewMonth < 0)  { calViewMonth = 11; calViewYear--; }
+  renderCalModal();
+}
+
+function renderCalModal() {
+  const today = todayKey();
+  const todayD = new Date(today + 'T12:00:00');
+  const log = getLog();
+
+  // Prevent going to future months
+  const nextBtn = document.getElementById('cal-next-month');
+  const isCurrentMonth = calViewYear === todayD.getFullYear() && calViewMonth === todayD.getMonth();
+  nextBtn.style.opacity = isCurrentMonth ? '0.2' : '1';
+  nextBtn.disabled = isCurrentMonth;
+
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('cal-month-label').textContent = monthNames[calViewMonth] + ' ' + calViewYear;
+
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = '';
+
+  // First day of month (convert Sunday=0 to Monday=0)
+  const first = new Date(calViewYear, calViewMonth, 1);
+  let startDow = first.getDay(); // 0=Sun
+  startDow = startDow === 0 ? 6 : startDow - 1; // Mon=0
+
+  const daysInMonth = new Date(calViewYear, calViewMonth + 1, 0).getDate();
+
+  // Empty cells before
+  for (let i = 0; i < startDow; i++) {
+    const empty = document.createElement('div');
+    grid.appendChild(empty);
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateKey = calViewYear + '-' +
+      String(calViewMonth + 1).padStart(2,'0') + '-' +
+      String(day).padStart(2,'0');
+
+    const isFuture = dateKey > today;
+    const isToday  = dateKey === today;
+    const isActive = dateKey === activeDate;
+    const hasData  = log[dateKey] && Object.values(log[dateKey]).some(v => v > 0);
+
+    const btn = document.createElement('div');
+    btn.textContent = day;
+    btn.style.cssText = `
+      padding: 10px 2px;
+      border-radius: 10px;
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      font-weight: ${isToday || isActive ? '700' : '500'};
+      cursor: ${isFuture ? 'default' : 'pointer'};
+      color: ${isFuture ? '#ccc' : isActive ? '#fff' : isToday ? '#2456a4' : '#0f2044'};
+      background: ${isActive ? '#0f2044' : isToday ? '#ebf3fb' : 'transparent'};
+      border: ${isToday && !isActive ? '1.5px solid #2456a4' : '1.5px solid transparent'};
+      position: relative;
+    `;
+
+    // Dot indicator for days with data
+    if (hasData && !isActive) {
+      const dot = document.createElement('div');
+      dot.style.cssText = 'width:5px;height:5px;border-radius:50%;background:#22c55e;position:absolute;bottom:3px;left:50%;transform:translateX(-50%);';
+      btn.style.position = 'relative';
+      btn.appendChild(dot);
+    }
+
+    if (!isFuture) {
+      btn.onclick = () => {
+        activeDate = dateKey;
+        document.getElementById('cal-modal').style.display = 'none';
+        updateDateNav();
+        refreshDailyUI();
+      };
+    }
+
+    grid.appendChild(btn);
+  }
+}
+
+function onDatePicked() {
+  // legacy — no longer used
+}
+
+function updateDateNav() {
+  const isToday = activeDate === todayKey();
+  const d = new Date(activeDate + 'T12:00:00');
+  const dateStr = d.toLocaleDateString('en-IE', { weekday:'short', day:'2-digit', month:'short', year:'numeric' });
+
+  const label = document.getElementById('date-nav-label');
+  const dateEl = document.getElementById('date-nav-date');
+  const btnNext = document.getElementById('btn-next');
+  const title = document.getElementById('daily-title');
+
+  label.textContent = isToday ? 'TODAY' : 'EDITING PAST DAY';
+  label.className = 'date-nav-label ' + (isToday ? 'is-today' : 'is-past');
+  dateEl.textContent = dateStr;
+  btnNext.disabled = isToday;
+  title.textContent = isToday ? "Today's Checklist" : "Past Day Checklist";
+
+  // Show/hide past banner
+  let banner = document.getElementById('past-banner');
+  if (!isToday) {
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'past-banner';
+      banner.className = 'past-banner';
+      const nav = document.querySelector('.date-nav');
+      nav.parentNode.insertBefore(banner, nav.nextSibling);
+    }
+    banner.textContent = '✏️ Editing ' + d.toLocaleDateString('en-IE', { weekday:'long', day:'2-digit', month:'long' }) + ' — changes save automatically';
+  } else {
+    if (banner) banner.remove();
+  }
+}
+
+// ══════════════════════════════════════════
+// RENDER DAILY
+// ══════════════════════════════════════════
+function buildDaily() {
+  const container = document.getElementById('daily-tasks');
+  container.innerHTML = '';
+
+  let currentSec = null;
+  let secBlock = null, taskCard = null;
+
+  TASKS.forEach(task => {
+    if (task.sec !== currentSec) {
+      currentSec = task.sec;
+      secBlock = document.createElement('div');
+      secBlock.className = 'section-block ' + (SEC_CLASS[task.sec] || '');
+      const title = document.createElement('div');
+      title.className = 'section-title';
+      title.textContent = task.sec;
+      secBlock.appendChild(title);
+      taskCard = document.createElement('div');
+      taskCard.className = 'task-card';
+      secBlock.appendChild(taskCard);
+      container.appendChild(secBlock);
+    }
+
+    const row = document.createElement('div');
+    row.className = 'task-row';
+    row.id = 'row-' + task.key;
+
+    if (task.type === 'tick') {
+      const check = document.createElement('div');
+      check.className = 'task-check';
+      check.id = 'chk-' + task.key;
+
+      const name = document.createElement('div');
+      name.className = 'task-name';
+      name.textContent = task.name;
+
+      row.appendChild(check);
+      row.appendChild(name);
+      row.onclick = () => toggleTick(task.key);
+
+    } else {
+      // qty
+      const name = document.createElement('div');
+      name.className = 'task-name';
+      name.textContent = task.name;
+
+      const qwrap = document.createElement('div');
+      qwrap.className = 'qty-wrap';
+
+      const minus = document.createElement('div');
+      minus.className = 'qty-btn';
+      minus.textContent = '−';
+      minus.onclick = (e) => { e.stopPropagation(); changeQty(task.key, -1); };
+
+      const val = document.createElement('div');
+      val.className = 'qty-val';
+      val.id = 'qty-' + task.key;
+
+      const plus = document.createElement('div');
+      plus.className = 'qty-btn';
+      plus.textContent = '+';
+      plus.onclick = (e) => { e.stopPropagation(); changeQty(task.key, 1); };
+
+      qwrap.appendChild(minus);
+      qwrap.appendChild(val);
+      qwrap.appendChild(plus);
+
+      row.appendChild(name);
+      row.appendChild(qwrap);
+    }
+
+    taskCard.appendChild(row);
+  });
+
+  refreshDailyUI();
+}
+
+function refreshDailyUI() {
+  let done = 0, total = 0;
+  TASKS.forEach(task => {
+    const val = getTaskValue(task.key);
+    const row = document.getElementById('row-' + task.key);
+    if (!row) return;
+    total++;
+
+    if (task.type === 'tick') {
+      const chk = document.getElementById('chk-' + task.key);
+      if (val) {
+        row.classList.add('done');
+        if (chk) chk.textContent = '✓';
+        done++;
+      } else {
+        row.classList.remove('done');
+        if (chk) chk.textContent = '';
+      }
+    } else {
+      const qv = document.getElementById('qty-' + task.key);
+      if (qv) {
+        qv.textContent = val || 0;
+        qv.className = 'qty-val' + (val > 0 ? ' nonzero' : '');
+      }
+      if (val > 0) { row.classList.add('done'); done++; }
+      else row.classList.remove('done');
+    }
+  });
+
+  document.getElementById('progress-pill').textContent = done + ' / ' + total;
+  const pct = total > 0 ? (done / total * 100) : 0;
+  document.getElementById('progress-bar').style.width = pct + '%';
+}
+
+function toggleTick(key) {
+  const cur = getTaskValue(key);
+  setTaskValue(key, cur ? 0 : 1);
+  refreshDailyUI();
+  showToast(cur ? 'Unmarked' : '✓ Done!');
+}
+
+function changeQty(key, delta) {
+  const cur = getTaskValue(key) || 0;
+  const nv = Math.max(0, cur + delta);
+  setTaskValue(key, nv);
+  refreshDailyUI();
+}
+
+// ══════════════════════════════════════════
+// REPORTS
+// ══════════════════════════════════════════
+let currentPeriod = 'week';
+
+function setReportPeriod(period) {
+  currentPeriod = period;
+  document.querySelectorAll('.report-tab').forEach((t,i) => {
+    t.classList.toggle('active', ['week','month','year','custom'][i] === period);
+  });
+
+  const now = new Date();
+  let from, to;
+  if (period === 'week') {
+    const day = now.getDay() || 7;
+    from = new Date(now); from.setDate(now.getDate() - day + 1);
+    to = new Date(now); to.setDate(now.getDate() + (7 - day));
+  } else if (period === 'month') {
+    from = new Date(now.getFullYear(), now.getMonth(), 1);
+    to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  } else if (period === 'year') {
+    from = new Date(now.getFullYear(), 0, 1);
+    to = new Date(now.getFullYear(), 11, 31);
+  } else {
+    return;
+  }
+
+  document.getElementById('date-from').value = from.toISOString().slice(0,10);
+  document.getElementById('date-to').value = to.toISOString().slice(0,10);
+  renderReport();
+}
+
+function renderReport() {
+  const fromVal = document.getElementById('date-from').value;
+  const toVal = document.getElementById('date-to').value;
+  if (!fromVal || !toVal) return;
+
+  const from = new Date(fromVal);
+  const to = new Date(toVal);
+  const log = getLog();
+
+  // Aggregate
+  const totals = {};
+  TASKS.forEach(t => totals[t.key] = 0);
+
+  let daysWorked = 0;
+  Object.keys(log).forEach(dk => {
+    const d = new Date(dk);
+    if (d >= from && d <= to) {
+      let hasWork = false;
+      TASKS.forEach(t => {
+        const v = log[dk][t.key] || 0;
+        totals[t.key] += v;
+        if (v > 0) hasWork = true;
+      });
+      if (hasWork) daysWorked++;
+    }
+  });
+
+  const totalTasks = Object.values(totals).reduce((a,b) => a+b, 0);
+  const maxVal = Math.max(...Object.values(totals), 1);
+
+  // Summary cards
+  const sumEl = document.getElementById('report-summary');
+  sumEl.innerHTML = `
+    <div class="summary-card">
+      <div class="sum-val">${totalTasks}</div>
+      <div class="sum-label">Total tasks done</div>
+    </div>
+    <div class="summary-card">
+      <div class="sum-val">${daysWorked}</div>
+      <div class="sum-label">Days worked</div>
+    </div>
+  `;
+
+  // Group by section
+  const sections = {};
+  TASKS.forEach(t => {
+    if (!sections[t.sec]) sections[t.sec] = [];
+    sections[t.sec].push(t);
+  });
+
+  const content = document.getElementById('report-content');
+  content.innerHTML = '';
+
+  Object.entries(sections).forEach(([sec, tasks]) => {
+    const secTotal = tasks.reduce((a,t) => a + totals[t.key], 0);
+
+    const secDiv = document.createElement('div');
+    secDiv.className = 'report-section';
+    secDiv.innerHTML = `<div class="report-sec-title">${sec} — ${secTotal} tasks</div>`;
+
+    const card = document.createElement('div');
+    card.className = 'report-card';
+
+    tasks.forEach(task => {
+      const v = totals[task.key];
+      const pct = Math.round(v / maxVal * 100);
+      const row = document.createElement('div');
+      row.className = 'report-row';
+      row.innerHTML = `
+        <div class="report-task-name">${task.name}</div>
+        <div class="report-bar"><div class="report-bar-fill" style="width:${pct}%"></div></div>
+        <div class="report-val ${v > 0 ? 'nonzero' : ''}">${v > 0 ? (task.type === 'qty' ? v : '✓ ' + v + 'x') : '—'}</div>
+      `;
+      card.appendChild(row);
+    });
+
+    secDiv.appendChild(card);
+    content.appendChild(secDiv);
+  });
+}
+
+function exportReport() {
+  const fromVal = document.getElementById('date-from').value;
+  const toVal   = document.getElementById('date-to').value;
+  if (!fromVal || !toVal) { showToast('Please set a date range'); return; }
+
+  const from = new Date(fromVal);
+  const to   = new Date(toVal);
+  const log  = getLog();
+
+  const totals = {};
+  TASKS.forEach(t => totals[t.key] = 0);
+  let daysWorked = 0;
+
+  Object.keys(log).forEach(dk => {
+    const d = new Date(dk);
+    if (d >= from && d <= to) {
+      let hasWork = false;
+      TASKS.forEach(t => {
+        const v = log[dk][t.key] || 0;
+        totals[t.key] += v;
+        if (v > 0) hasWork = true;
+      });
+      if (hasWork) daysWorked++;
+    }
+  });
+
+  const totalDone = TASKS.filter(t => totals[t.key] > 0).length;
+  const totalPossible = TASKS.length;
+  const pct = Math.round(totalDone / totalPossible * 100);
+
+  // Build HTML for PDF printing
+  const sections = {};
+  TASKS.forEach(t => {
+    if (!sections[t.sec]) sections[t.sec] = [];
+    sections[t.sec].push(t);
+  });
+
+  const fromStr = from.toLocaleDateString('en-IE', {day:'2-digit',month:'long',year:'numeric'});
+  const toStr   = to.toLocaleDateString('en-IE',   {day:'2-digit',month:'long',year:'numeric'});
+  const genDate = new Date().toLocaleDateString('en-IE', {day:'2-digit',month:'2-digit',year:'numeric'});
+
+  let sectionsHTML = '';
+  for (const [sec, tasks] of Object.entries(sections)) {
+    const secTotal = tasks.reduce((a,t) => a + totals[t.key], 0);
+    const rows = tasks.map(t => {
+      const v = totals[t.key];
+      const done = v > 0;
+      const valStr = done ? (t.type === 'qty' ? v : `&#10003; ${v}x`) : '&mdash;';
+      return `<tr class="${done ? 'done' : 'miss'}">
+        <td class="task-name">${t.name}</td>
+        <td class="task-val">${valStr}</td>
+      </tr>`;
+    }).join('');
+
+    sectionsHTML += `
+      <div class="section">
+        <div class="sec-header">${sec} <span class="sec-count">${secTotal} tasks</span></div>
+        <table><tbody>${rows}</tbody></table>
+      </div>`;
+  }
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>HedgeServ Report</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=DM+Mono:wght@500&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: #fff; color: #0f2044; font-size: 11px; }
+    .header { background: #0f2044; color: #fff; padding: 18px 20px 14px; display: flex; justify-content: space-between; align-items: center; }
+    .header h1 { font-size: 20px; font-weight: 700; }
+    .header .sub { font-size: 10px; color: #b0c4e8; margin-top: 3px; }
+    .header .right { text-align: right; font-size: 10px; color: #b0c4e8; }
+    .meta { background: #ebf3fb; padding: 10px 20px; display: flex; gap: 30px; font-size: 10px; }
+    .meta strong { color: #0f2044; }
+    .cards { display: flex; gap: 10px; padding: 14px 20px; }
+    .card { flex: 1; border-radius: 8px; padding: 12px; text-align: center; }
+    .card .cv { font-family: 'DM Mono', monospace; font-size: 24px; font-weight: 700; }
+    .card .cl { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: #8a96b0; margin-bottom: 4px; }
+    .card.green  { background: #e8f7ef; } .card.green .cv  { color: #1a7a4a; }
+    .card.blue   { background: #ebf3fb; } .card.blue .cv   { color: #2456a4; }
+    .card.orange { background: #fff8e1; } .card.orange .cv { color: #f0a500; }
+    .card.red    { background: #fdecea; } .card.red .cv    { color: #c0392b; }
+    .body { padding: 0 20px 20px; }
+    .section { margin-bottom: 14px; }
+    .sec-header { background: #1a3260; color: #fff; padding: 7px 10px; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; border-radius: 6px 6px 0 0; display: flex; justify-content: space-between; }
+    .sec-count { font-weight: 400; color: #b0c4e8; }
+    table { width: 100%; border-collapse: collapse; }
+    tr:nth-child(even) { background: #f4f6fb; }
+    td { padding: 6px 10px; border-bottom: 1px solid #dde3f0; }
+    .task-name { flex: 1; }
+    .task-val { text-align: right; font-family: 'DM Mono', monospace; font-weight: 700; width: 60px; }
+    tr.done .task-val { color: #1a7a4a; }
+    tr.miss { background: #fdecea !important; }
+    tr.miss .task-name { color: #c0392b; }
+    tr.miss .task-val { color: #c0392b; }
+    .footer { margin-top: 14px; padding-top: 10px; border-top: 1px solid #dde3f0; display: flex; justify-content: space-between; color: #8a96b0; font-size: 9px; }
+    @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+  </style></head><body>
+  <div class="header">
+    <div><h1>HEDGESERV</h1><div class="sub">OFFICE CLEANING REPORT</div></div>
+    <div class="right"><strong>Weekly Report</strong><br>${fromStr} &ndash; ${toStr}<br>Generated: ${genDate}</div>
+  </div>
+  <div class="meta">
+    <div><strong>Period:</strong> ${fromStr} &ndash; ${toStr}</div>
+    <div><strong>Days worked:</strong> ${daysWorked}</div>
+    <div><strong>Prepared by:</strong> Cleaning Staff</div>
+  </div>
+  <div class="cards">
+    <div class="card green"><div class="cl">Completion</div><div class="cv">${pct}%</div></div>
+    <div class="card blue"><div class="cl">Days Worked</div><div class="cv">${daysWorked}</div></div>
+    <div class="card orange"><div class="cl">Tasks Done</div><div class="cv">${totalDone}</div></div>
+    <div class="card red"><div class="cl">Missed</div><div class="cv">${totalPossible - totalDone}</div></div>
+  </div>
+  <div class="body">${sectionsHTML}
+    <div class="footer">
+      <span>HedgeServ Office Cleaning Report</span>
+      <span>${fromStr} &ndash; ${toStr}</span>
+      <span>Generated ${genDate}</span>
+    </div>
+  </div>
+</body></html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  setTimeout(() => { win.print(); }, 600);
+  showToast('📄 Report ready to print / save as PDF');
+}
+
+// ══════════════════════════════════════════
+// HISTORY
+// ══════════════════════════════════════════
+function renderHistory() {
+  const log = getLog();
+  const container = document.getElementById('history-content');
+  const dates = Object.keys(log).sort().reverse();
+
+  if (dates.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="es-icon">📋</div><p>No history yet.<br>Start marking tasks on the Daily tab!</p></div>`;
+    return;
+  }
+
+  container.innerHTML = '';
+  dates.forEach(dk => {
+    const data = log[dk];
+    const doneTasks = TASKS.filter(t => data[t.key] > 0);
+    if (doneTasks.length === 0) return;
+
+    const d = new Date(dk + 'T12:00:00');
+    const dayStr = d.toLocaleDateString('en-IE', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+
+    const block = document.createElement('div');
+    block.className = 'history-day';
+    block.innerHTML = `<div class="history-day-header"><span>${dayStr}</span><small>${doneTasks.length} tasks</small></div>`;
+
+    doneTasks.forEach(t => {
+      const v = data[t.key];
+      const item = document.createElement('div');
+      item.className = 'history-item';
+      item.innerHTML = `<span class="hi-check">✓</span><span>${t.name}</span><span class="hi-val">${t.type === 'qty' ? v : '×1'}</span>`;
+      block.appendChild(item);
+    });
+
+    container.appendChild(block);
+  });
+}
+
+// ══════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.tab')[['daily','reports','history'].indexOf(page)].classList.add('active');
+
+  if (page === 'reports') { setReportPeriod(currentPeriod); }
+  if (page === 'history') renderHistory();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+(function init() {
+  const now = new Date();
+  document.getElementById('today-display').textContent =
+    now.toLocaleDateString('en-IE', { day:'2-digit', month:'short', year:'numeric' });
+  document.getElementById('day-display').textContent =
+    now.toLocaleDateString('en-IE', { weekday:'long' });
+
+  updateDateNav();
+  buildDaily();
+  setReportPeriod('week');
+})();
+</script>
+</body>
+</html>
